@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Market Intelligence Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                🤖 Agentic Orchestration Suite
+            </h1>
+            <span class="text-xs bg-slate-800 border border-slate-700 text-slate-400 px-3 py-1 rounded-full">
+                Powered by Groq & LangGraph
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 w-full flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="space-y-6 md:col-span-1">
+            <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl backdrop-blur-sm">
+                <h2 class="text-lg font-semibold mb-4 text-slate-200">Target Analytics</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="companyName" class="block text-sm text-slate-400 mb-2">Company Name</label>
+                        <input type="text" id="companyName" value="Tesla"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <button id="generateBtn" onclick="triggerAgentWorkflow()"
+                        class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-600/20 active:scale-[0.98]">
+                        Run Agent Swarm
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl backdrop-blur-sm">
+                <h3 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-3">Orchestrator Logs</h3>
+                <div id="statusLogs" class="space-y-3 text-sm">
+                    <p class="text-slate-500 italic">Ready to initialize...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-2 space-y-6">
+            <div id="resultContainer" class="bg-slate-800/30 border border-slate-800 p-6 rounded-2xl min-h-[400px] flex flex-col justify-center items-center relative overflow-hidden">
+                
+                <div id="placeholder" class="text-center max-w-sm">
+                    <div class="text-4xl mb-3">📈</div>
+                    <p class="text-slate-400">Enter a company name and trigger the agent loop to extract competitor intelligence and compile code visualizations.</p>
+                </div>
+
+                <div id="loader" class="hidden text-center space-y-4 z-10">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400 mx-auto"></div>
+                    <p class="text-blue-400 font-medium">Agents are thinking, executing, and self-correcting...</p>
+                </div>
+
+                <div id="dashboard" class="hidden w-full h-full space-y-6">
+                    <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-2">
+                        <div>
+                            <h3 id="displayCompany" class="text-2xl font-bold text-white">Tesla Insights</h3>
+                            <p class="text-sm text-slate-400">Direct Competitors Discovered</p>
+                        </div>
+                        <div id="competitorPills" class="flex flex-wrap gap-2">
+                            </div>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex justify-center items-center">
+                        <img id="marketChart" src="" alt="Market Competitor Visualization Chart" class="max-w-full h-auto rounded-lg shadow-md hidden">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "http://localhost:8000"; // Update with your FastAPI port if different
+
+        async function triggerAgentWorkflow() {
+            const companyName = document.getElementById("companyName").value.trim();
+            if (!companyName) return alert("Please specify a company target.");
+
+            const generateBtn = document.getElementById("generateBtn");
+            const placeholder = document.getElementById("placeholder");
+            const loader = document.getElementById("loader");
+            const dashboard = document.getElementById("dashboard");
+            const marketChart = document.getElementById("marketChart");
+            const statusLogs = document.getElementById("statusLogs");
+            const competitorPills = document.getElementById("competitorPills");
+
+            // UI Reset
+            generateBtn.disabled = true;
+            generateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            placeholder.classList.add("hidden");
+            dashboard.classList.add("hidden");
+            marketChart.classList.add("hidden");
+            loader.classList.remove("hidden");
+
+            statusLogs.innerHTML = `
+                <div class="flex items-center gap-2 text-blue-400">
+                    <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                    <span>[Supervisor] Spinning up node graphs...</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-400 mt-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span>[Researcher] Querying Tavily live web vectors...</span>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/generate-chart`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ company_name: companyName })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || "Workflow crash occurred.");
+                }
+
+                const data = await response.json();
+
+                // Append Final Successful Logs
+                statusLogs.innerHTML += `
+                    <div class="flex items-center gap-2 text-emerald-400 mt-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>[Coder] Python script created cleanly.</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-emerald-400 mt-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>[Executor] Image written securely to filesystem.</span>
+                    </div>
+                `;
+
+                // Update Dashboard Values
+                document.getElementById("displayCompany").innerText = `${data.company_name} Intelligence Suite`;
+                
+                // Clear and render pills
+                competitorPills.innerHTML = "";
+                data.competitors.forEach(comp => {
+                    const pill = document.createElement("span");
+                    pill.className = "bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs px-3 py-1 rounded-full font-medium shadow-sm";
+                    pill.innerText = comp;
+                    competitorPills.appendChild(pill);
+                });
+
+                // Fetch and showcase chart with cache busting query string
+                marketChart.src = `${API_BASE}${data.chart_url}?t=${new Date().getTime()}`;
+                marketChart.classList.remove("hidden");
+                dashboard.classList.remove("hidden");
+
+            } catch (err) {
+                console.error(err);
+                statusLogs.innerHTML += `
+                    <div class="flex items-center gap-2 text-rose-400 mt-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>[Fatal Error] System failed validation loop.</span>
+                    </div>
+                `;
+                alert(err.message);
+                placeholder.classList.remove("hidden");
+            } finally {
+                loader.classList.add("hidden");
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    </script>
+</body>
+</html>
