@@ -2,7 +2,7 @@
 
 A multi-agent AI system that autonomously researches company competitors, generates Python visualization code, executes it, and self-corrects on failure — all orchestrated through a LangGraph state machine and served via a FastAPI backend.
 
-![Market Chart Demo](market_chart.png)
+![Market Chart Demo](assets/demo_chart.png)
 
 ---
 
